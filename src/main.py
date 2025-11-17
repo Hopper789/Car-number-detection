@@ -2,28 +2,10 @@ import cv2
 import pytesseract
 from ultralytics import YOLO
 import numpy as np
-from PIL import ImageFont, ImageDraw, Image
 
 # ========================
 # Предобработка
 # ========================
-def puttext_ru(img, text, pos, font_path="arial.ttf", font_size=32, color=(0,255,0)):
-    # OpenCV -> PIL
-    img_pil = Image.fromarray(cv2.cvtColor(img, cv2.COLOR_BGR2RGB))
-    draw = ImageDraw.Draw(img_pil)
-    font = ImageFont.truetype(font_path, font_size)
-    draw.text(pos, text, font=font, fill=color)
-    # PIL -> OpenCV
-    img = cv2.cvtColor(np.array(img_pil), cv2.COLOR_RGB2BGR)
-    return img
-
-def preprocess_plate(plate_img):
-    """Улучшение читаемости перед OCR."""
-    plate = cv2.resize(plate_img, None, fx=2.0, fy=2.0, interpolation=cv2.INTER_LINEAR)
-    gray = cv2.cvtColor(plate, cv2.COLOR_BGR2GRAY)
-    gray = cv2.bilateralFilter(gray, 11, 17, 17)
-    return gray
-
 def preprocess_plate(plate_img):
     plate = cv2.resize(plate_img, None, fx=2.0, fy=2.0,
                        interpolation=cv2.INTER_LINEAR)
@@ -45,8 +27,7 @@ def preprocess_plate(plate_img):
 # ========================
 # Фильтрация мусора OCR
 # ========================
-def is_valid_plate(text: str) -> bool:
-    """Отбрасываем мусорные распознавания OCR."""
+def is_valid_plate(text):
     if len(text) < 5 or len(text) > 10:
         return False
     
@@ -73,10 +54,6 @@ def extract_plate_text(plate_img):
     text = ''.join(ch for ch in text if ch.isalnum())
     return text
 
-
-# ========================
-# MAIN PIPELINE
-# ========================
 def main():
     cap = cv2.VideoCapture("../data/videoplayback.mp4")
 
@@ -139,10 +116,6 @@ def main():
     out.release()
     cv2.destroyAllWindows()
 
-
-# ========================
-# RUN
-# ========================
 if __name__ == "__main__":
     model = YOLO("../weights/best.pt")
     config = (
